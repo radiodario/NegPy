@@ -1,0 +1,37 @@
+# xcodegen spec: `brew install xcodegen`, then `xcodegen generate` in this folder after
+# `mobile/scripts/build_xcframework.sh` has written Generated/.
+name: NegPy
+options:
+  bundleIdPrefix: co.alolo
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+targets:
+  NegPy:
+    type: application
+    platform: iOS
+    sources:
+      - path: NegPy/Sources
+      - path: Generated/swift
+    dependencies:
+      - framework: Generated/NegPyCoreFFI.xcframework
+        embed: false
+    info:
+      path: NegPy/Info.plist
+      properties:
+        CFBundleDisplayName: NegPy
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: co.alolo.negpy
+        OTHER_LDFLAGS: ["-lnegpy_mobile"]
+        SWIFT_OBJC_INTEROP_MODE: objc

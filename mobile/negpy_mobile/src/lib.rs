@@ -6,6 +6,7 @@ pub mod config;
 pub mod context;
 pub mod image;
 pub mod pipeline;
+pub mod proxy;
 
 #[doc(hidden)]
 pub mod fixture;
