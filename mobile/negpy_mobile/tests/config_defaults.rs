@@ -36,11 +36,7 @@ fn every_typed_field_names_a_desktop_key() {
                 .get(key)
                 .unwrap_or_else(|| panic!("{key} is not a desktop field"));
             match (desktop.as_f64(), value.as_f64()) {
-                // The typed fields are f32; the desktop writes Python floats.
-                (Some(a), Some(b)) => assert!(
-                    (a - b).abs() <= 1e-6 * a.abs().max(1.0),
-                    "{key}: desktop default differs"
-                ),
+                (Some(a), Some(b)) => assert_eq!(a, b, "{key}: desktop default differs"),
                 _ => assert_eq!(desktop, value, "{key}: desktop default differs"),
             }
         }
@@ -82,7 +78,7 @@ fn the_default_edit_reads_back_as_the_defaults() {
             .get(key)
             .unwrap_or_else(|| panic!("{key} is not a desktop field"));
         match (d.as_f64(), value.as_f64()) {
-            (Some(a), Some(b)) => assert!((a - b).abs() <= 1e-6 * a.abs().max(1.0), "{key}"),
+            (Some(a), Some(b)) => assert_eq!(a, b, "{key}"),
             _ => assert_eq!(d, value, "{key}"),
         }
     }

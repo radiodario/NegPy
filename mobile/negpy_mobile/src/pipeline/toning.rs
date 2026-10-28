@@ -8,7 +8,7 @@ use negpy_core::toning::{self as core, Bath, Toning};
 use crate::config::{AltProcess, ProcessMode, ToningConfig};
 use crate::context::PipelineContext;
 use crate::image::Image;
-use crate::pipeline::lab::{wide, working_lab};
+use crate::pipeline::lab::working_lab;
 
 /// One bath's constants: reference density, exponent, per-channel covering-power gain. The
 /// gains are float32 as the desktop passes them.
@@ -101,7 +101,7 @@ pub fn apply_chemical_toning(img: &Image, cfg: &ToningConfig, lith_active: bool)
     if strengths.iter().all(|&s| s == 0.0) {
         return None;
     }
-    let [sel, sep, gold, blue, copper, van] = strengths.map(wide);
+    let [sel, sep, gold, blue, copper, van] = strengths;
     let c = if lith_active {
         LITH_TONING_CONSTANTS
     } else {
@@ -155,11 +155,8 @@ pub fn apply_split_toning(
 pub fn split_toning(img: &Image, cfg: &ToningConfig) -> Option<Image> {
     apply_split_toning(
         img,
-        (wide(cfg.shadow_tint_hue), wide(cfg.shadow_tint_strength)),
-        (
-            wide(cfg.highlight_tint_hue),
-            wide(cfg.highlight_tint_strength),
-        ),
+        (cfg.shadow_tint_hue, cfg.shadow_tint_strength),
+        (cfg.highlight_tint_hue, cfg.highlight_tint_strength),
     )
 }
 

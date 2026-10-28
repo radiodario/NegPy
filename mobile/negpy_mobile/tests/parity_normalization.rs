@@ -41,26 +41,18 @@ fn assert_exact(name: &str, actual: f64, expected: f64) {
     );
 }
 
-fn assert_within(name: &str, actual: f64, expected: f64, rel: f64) {
-    let tol = rel * expected.abs().max(1.0);
-    assert!(
-        (actual - expected).abs() <= tol,
-        "{name}: {actual:?} != {expected:?} (diff {:e}, tol {tol:e})",
-        actual - expected
-    );
-}
-
-fn assert_bounds(name: &str, actual: &Bounds, expected: &Bounds, rel: f64) {
+fn assert_bounds(name: &str, actual: &Bounds, expected: &Bounds) {
     for ch in 0..3 {
-        let f = format!("{name}.floors[{ch}]");
-        let c = format!("{name}.ceils[{ch}]");
-        if rel == 0.0 {
-            assert_exact(&f, actual.floors[ch], expected.floors[ch]);
-            assert_exact(&c, actual.ceils[ch], expected.ceils[ch]);
-        } else {
-            assert_within(&f, actual.floors[ch], expected.floors[ch], rel);
-            assert_within(&c, actual.ceils[ch], expected.ceils[ch], rel);
-        }
+        assert_exact(
+            &format!("{name}.floors[{ch}]"),
+            actual.floors[ch],
+            expected.floors[ch],
+        );
+        assert_exact(
+            &format!("{name}.ceils[{ch}]"),
+            actual.ceils[ch],
+            expected.ceils[ch],
+        );
     }
 }
 
@@ -120,30 +112,21 @@ fn every_fixture_reproduces_the_bounds() {
             &format!("{name}.log_bounds"),
             &analyzed,
             &bounds_of(&m["log_bounds"]),
-            0.0,
         );
         assert_bounds(
             &format!("{name}.log_bounds_base"),
             &n.log_bounds_base,
             &bounds_of(&m["log_bounds_base"]),
-            0.0,
         );
         assert_bounds(
             &format!("{name}.pre_trim_bounds"),
             &n.pre_trim_bounds,
             &bounds_of(&m["pre_trim_bounds"]),
-            0.0,
         );
-        // ProcessConfig holds the White/Black Point offsets as f32; the desktop adds the Python
-        // float, so a non-dyadic offset moves the trimmed floors in their last f64 bits.
-        let trimmed = f.edit().config.process.white_point_offset != 0.0
-            || f.edit().config.process.black_point_offset != 0.0;
-        let rel = if trimmed { 1e-8 } else { 0.0 };
         assert_bounds(
             &format!("{name}.final_bounds"),
             &n.final_bounds,
             &bounds_of(&m["final_bounds"]),
-            rel,
         );
         assert_exact(
             &format!("{name}.norm_density_range"),
@@ -336,7 +319,7 @@ fn c41_masks_reproduces_the_contrast_mask_and_diffusion_planes() {
     assert_eq!(diff, 0.0, "{name}: contrast mask plane differs by {diff}");
     assert_exact(
         "contrast_mask_centre",
-        ctx.metrics.contrast_mask_centre as f64,
+        ctx.metrics.contrast_mask_centre,
         f.metrics()["contrast_mask_centre"].as_f64().unwrap(),
     );
     assert_eq!(ctx.metrics.contrast_mask_roi, None);

@@ -15,15 +15,15 @@ use crate::pipeline::papers::{
 
 pub type Rgb64 = [f64; 3];
 
-/// `LogNegativeBounds` at the desktop's float64.
+/// `LogNegativeBounds` as arrays, for the per-channel math.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Bounds64 {
     pub floors: Rgb64,
     pub ceils: Rgb64,
 }
 
-pub fn rgb64(v: (f32, f32, f32)) -> Rgb64 {
-    [v.0 as f64, v.1 as f64, v.2 as f64]
+pub fn rgb64(v: (f64, f64, f64)) -> Rgb64 {
+    [v.0, v.1, v.2]
 }
 
 impl From<LogNegativeBounds> for Bounds64 {
@@ -35,7 +35,7 @@ impl From<LogNegativeBounds> for Bounds64 {
     }
 }
 
-/// `metrics["neutral_axis_refs"]` at float64.
+/// `metrics["neutral_axis_refs"]` as arrays.
 #[derive(Clone, Debug, PartialEq)]
 pub struct NeutralAxis64 {
     pub mid: Rgb64,
@@ -50,7 +50,7 @@ impl From<&NeutralAxis> for NeutralAxis64 {
             mid: rgb64(a.mid),
             shadow: rgb64(a.shadow),
             highlight: a.highlight.map(rgb64),
-            confidence: a.confidence as f64,
+            confidence: a.confidence,
         }
     }
 }
@@ -884,7 +884,8 @@ pub fn apply_characteristic_curve(
     Ok(Image::new(h, w, out))
 }
 
-/// `np.linalg.solve` of a 3x3 system: LU with partial pivoting; None when singular.
+/// `np.linalg.solve` of a 3x3 system: LU with partial pivoting, every update a fused
+/// multiply-add as OpenBLAS's kernels round it; None when singular.
 fn solve3(mut a: [[f64; 3]; 3], mut b: [f64; 3]) -> Option<[f64; 3]> {
     for j in 0..3 {
         let mut p = j;
@@ -904,14 +905,14 @@ fn solve3(mut a: [[f64; 3]; 3], mut b: [f64; 3]) -> Option<[f64; 3]> {
         }
         for i in j + 1..3 {
             for k in j + 1..3 {
-                a[i][k] -= a[i][j] * a[j][k];
+                a[i][k] = (-a[i][j]).mul_add(a[j][k], a[i][k]);
             }
         }
     }
     for k in 0..3 {
         if b[k] != 0.0 {
             for i in k + 1..3 {
-                b[i] -= b[k] * a[i][k];
+                b[i] = (-b[k]).mul_add(a[i][k], b[i]);
             }
         }
     }
@@ -919,7 +920,7 @@ fn solve3(mut a: [[f64; 3]; 3], mut b: [f64; 3]) -> Option<[f64; 3]> {
         if b[k] != 0.0 {
             b[k] /= a[k][k];
             for i in 0..k {
-                b[i] -= b[k] * a[i][k];
+                b[i] = (-b[k]).mul_add(a[i][k], b[i]);
             }
         }
     }

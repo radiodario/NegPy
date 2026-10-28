@@ -9,7 +9,7 @@ use negpy_core::altprocess::{self as core, Cyanotype, Interp, Lith, Sabattier};
 use crate::config::{AltProcess, AltProcessConfig, PipelineConfig, ProcessMode};
 use crate::context::PipelineContext;
 use crate::image::Image;
-use crate::pipeline::lab::{gaussian_kernel_1d, wide, working_lab};
+use crate::pipeline::lab::{gaussian_kernel_1d, working_lab};
 use crate::pipeline::papers::{
     LithPath, PaperProfile, effective_constants, effective_paper_profile,
 };
@@ -192,11 +192,7 @@ pub fn lith_stage(
         &paper.lith_path,
         paper_d_max(paper),
         cfg.alt_process == AltProcess::Lith,
-        (
-            wide(cfg.lith_exposure),
-            wide(cfg.lith_snatch),
-            wide(cfg.lith_abruptness),
-        ),
+        (cfg.lith_exposure, cfg.lith_snatch, cfg.lith_abruptness),
     )
 }
 
@@ -214,10 +210,10 @@ pub fn cyanotype_stage(
         &cfg.cyano_sensitizer,
         cfg.alt_process == AltProcess::Cyanotype,
         (
-            wide(cfg.cyano_exposure),
-            wide(cfg.cyano_scale),
-            wide(cfg.cyano_bleach),
-            wide(cfg.cyano_tannin),
+            cfg.cyano_exposure,
+            cfg.cyano_scale,
+            cfg.cyano_bleach,
+            cfg.cyano_tannin,
         ),
     )
 }
@@ -237,9 +233,9 @@ pub fn sabattier_stage(
         paper_d_max(paper),
         cfg.alt_process == AltProcess::Sabattier,
         (
-            wide(cfg.sabattier_strength),
-            wide(cfg.sabattier_reexposure),
-            line_sigma_px(wide(cfg.sabattier_agitation), img.shape()),
+            cfg.sabattier_strength,
+            cfg.sabattier_reexposure,
+            line_sigma_px(cfg.sabattier_agitation, img.shape()),
         ),
     )
 }

@@ -202,7 +202,7 @@ pub fn build_contrast_mask(
     };
     if let Some(expanded) = expand_mask_plane(&plane, render_shape, roi) {
         ctx.metrics.contrast_mask_plane = Some(expanded);
-        ctx.metrics.contrast_mask_centre = centre;
+        ctx.metrics.contrast_mask_centre = f64::from(centre);
         ctx.metrics.contrast_mask_roi = None;
     }
 }

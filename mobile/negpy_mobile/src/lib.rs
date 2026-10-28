@@ -11,5 +11,9 @@ pub mod proxy;
 #[cfg(feature = "ffi")]
 pub mod ffi;
 
+// uniffi's scaffolding lives at the crate root, where its derives look for it.
+#[cfg(feature = "ffi")]
+uniffi::setup_scaffolding!();
+
 #[doc(hidden)]
 pub mod fixture;

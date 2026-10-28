@@ -3,8 +3,7 @@
 //! Diffusion planes the engine builds from the source between base and exposure (`planes`).
 //!
 //! Bounds and meter readings are `f64` here, as the desktop holds them as Python floats; the
-//! kernels read the bounds as float32, as `normalize_log_image` casts them. `Metrics` stores
-//! the readings as float32, so `normalize_detailed` also hands back the full-precision values.
+//! kernels read the bounds as float32, as `normalize_log_image` casts them.
 
 mod axis;
 mod bounds;
@@ -85,10 +84,7 @@ impl Bounds {
     }
 
     pub fn from_rgb(floors: Rgb, ceils: Rgb) -> Self {
-        Self::new(
-            [floors.0 as f64, floors.1 as f64, floors.2 as f64],
-            [ceils.0 as f64, ceils.1 as f64, ceils.2 as f64],
-        )
+        Self::new([floors.0, floors.1, floors.2], [ceils.0, ceils.1, ceils.2])
     }
 
     pub fn from_metric(b: &LogNegativeBounds) -> Self {
@@ -96,8 +92,8 @@ impl Bounds {
     }
 
     pub fn to_metric(self) -> LogNegativeBounds {
-        let [f0, f1, f2] = self.floors32();
-        let [c0, c1, c2] = self.ceils32();
+        let [f0, f1, f2] = self.floors;
+        let [c0, c1, c2] = self.ceils;
         LogNegativeBounds {
             floors: (f0, f1, f2),
             ceils: (c0, c1, c2),
@@ -127,13 +123,13 @@ pub struct Axis {
 
 impl Axis {
     pub fn to_metric(&self) -> NeutralAxis {
-        let rgb = |r: [f64; 3]| (r[0] as f32, r[1] as f32, r[2] as f32);
+        let rgb = |r: [f64; 3]| (r[0], r[1], r[2]);
         NeutralAxis {
             mid: rgb(self.mid),
             shadow: rgb(self.shadow),
             highlight: self.highlight.map(rgb),
-            confidence: self.confidence as f32,
-            offset_weight: self.offset_weight.map(|w| w as f32),
+            confidence: self.confidence,
+            offset_weight: self.offset_weight,
         }
     }
 }
@@ -143,12 +139,12 @@ pub type Unmix = [[f64; 3]; 3];
 
 /// `resolve_crosstalk_matrix`: identity-to-calibration blend by `strength`, row-normalized;
 /// None when off.
-pub fn resolve_crosstalk_matrix(strength: f64, matrix: Option<&[f32]>) -> Option<Unmix> {
+pub fn resolve_crosstalk_matrix(strength: f64, matrix: Option<&[f64]>) -> Option<Unmix> {
     if strength <= 0.0 {
         return None;
     }
     let cal: [f64; 9] = match matrix {
-        Some(m) if m.len() == 9 => std::array::from_fn(|i| m[i] as f64),
+        Some(m) if m.len() == 9 => std::array::from_fn(|i| m[i]),
         _ => DEFAULT_CROSSTALK_MATRIX,
     };
     let mut applied: Unmix = std::array::from_fn(|i| {
@@ -175,7 +171,7 @@ pub fn effective_crosstalk_matrix(
         return None;
     }
     resolve_crosstalk_matrix(
-        process.crosstalk_strength as f64,
+        process.crosstalk_strength,
         process.crosstalk_matrix.as_deref(),
     )
 }
@@ -274,8 +270,8 @@ pub fn prefilter_log_grid(image: &Image, roi: Option<Roi>, buffer: f64) -> Image
 }
 
 /// `_rect_roi`: a normalized (x1, y1, x2, y2) rect as a pixel ROI; None when degenerate.
-fn rect_roi((h, w): (usize, usize), rect: (f32, f32, f32, f32)) -> Option<Roi> {
-    let (x1, y1, x2, y2) = (rect.0 as f64, rect.1 as f64, rect.2 as f64, rect.3 as f64);
+fn rect_roi((h, w): (usize, usize), rect: (f64, f64, f64, f64)) -> Option<Roi> {
+    let (x1, y1, x2, y2) = rect;
     let roi = (
         (y1.min(y2) * h as f64) as usize,
         (y1.max(y2) * h as f64) as usize,
@@ -291,8 +287,8 @@ pub fn resolve_analysis_region(
     shape: (usize, usize),
     active_roi: Option<Roi>,
     analysis_buffer: f64,
-    analysis_rect: Option<(f32, f32, f32, f32)>,
-    meter_rect: Option<(f32, f32, f32, f32)>,
+    analysis_rect: Option<(f64, f64, f64, f64)>,
+    meter_rect: Option<(f64, f64, f64, f64)>,
 ) -> (Option<Roi>, f64) {
     if let Some(roi) = analysis_rect.and_then(|r| rect_roi(shape, r)) {
         return (Some(roi), 0.0);
@@ -482,7 +478,7 @@ pub fn measure_base_log(image: &Image) -> Option<[f64; 3]> {
 
 /// `measure_base_log` as the context stores it.
 pub fn base_log(image: &Image) -> Option<Rgb> {
-    measure_base_log(image).map(|b| (b[0] as f32, b[1] as f32, b[2] as f32))
+    measure_base_log(image).map(|b| (b[0], b[1], b[2]))
 }
 
 /// `base_scan_density`: the clear base's per-channel scan density after the unmix, the space
@@ -498,20 +494,8 @@ pub fn base_scan_density(base_log: Option<[f64; 3]>, unmix: Option<&Unmix>) -> O
 
 /// `per_channel_point_offsets` as Python floats: global plus per-layer trim.
 fn per_channel_point_offsets(process: &ProcessConfig) -> ([f64; 3], [f64; 3]) {
-    let wp = process.white_point_offset as f64;
-    let bp = process.black_point_offset as f64;
-    (
-        [
-            wp + process.white_point_trim_red as f64,
-            wp + process.white_point_trim_green as f64,
-            wp + process.white_point_trim_blue as f64,
-        ],
-        [
-            bp + process.black_point_trim_red as f64,
-            bp + process.black_point_trim_green as f64,
-            bp + process.black_point_trim_blue as f64,
-        ],
-    )
+    let (wp, bp) = process.per_channel_point_offsets();
+    ([wp.0, wp.1, wp.2], [bp.0, bp.1, bp.2])
 }
 
 /// What `NormalizationProcessor.process` writes into `context.metrics`, in its own precision.
@@ -546,7 +530,7 @@ pub fn normalize_detailed(
     let (an_roi, an_buffer) = resolve_analysis_region(
         image.shape(),
         active_roi,
-        process.analysis_buffer as f64,
+        process.analysis_buffer,
         process.analysis_rect,
         process.meter_rect,
     );
@@ -563,8 +547,8 @@ pub fn normalize_detailed(
             &prefiltered,
             None,
             0.0,
-            process.luma_range_clip as f64,
-            process.color_range_clip as f64,
+            process.luma_range_clip,
+            process.color_range_clip,
         );
         analyzed = Some(b);
         b
@@ -619,10 +603,7 @@ pub fn normalize_detailed(
 /// stored in `ctx.metrics`. An analyzed `log_bounds` replaces the stored one; a locked frame
 /// keeps it, as the desktop's metrics dict does.
 pub fn normalize(img: &Image, cfg: &ProcessConfig, ctx: &mut PipelineContext) -> Image {
-    let base_log = ctx
-        .metrics
-        .base_log
-        .map(|b| [b.0 as f64, b.1 as f64, b.2 as f64]);
+    let base_log = ctx.metrics.base_log.map(|b| [b.0, b.1, b.2]);
     let n = normalize_detailed(img, cfg, ctx.process_mode, ctx.active_roi, base_log);
     let m = &mut ctx.metrics;
     if let Some(b) = n.log_bounds {
@@ -631,13 +612,13 @@ pub fn normalize(img: &Image, cfg: &ProcessConfig, ctx: &mut PipelineContext) ->
     m.log_bounds_base = Some(n.log_bounds_base.to_metric());
     m.pre_trim_bounds = Some(n.pre_trim_bounds.to_metric());
     m.final_bounds = Some(n.final_bounds.to_metric());
-    m.norm_density_range = Some(n.norm_density_range as f32);
+    m.norm_density_range = Some(n.norm_density_range);
     m.neutral_axis_refs = n.neutral_axis_refs.as_ref().map(Axis::to_metric);
-    m.metered_anchor = Some(n.metered_anchor as f32);
-    m.textural_range = Some(n.textural_range as f32);
-    m.shadow_point = Some(n.shadow_point);
-    m.highlight_point = Some(n.highlight_point);
+    m.metered_anchor = Some(n.metered_anchor);
+    m.textural_range = Some(n.textural_range);
+    m.shadow_point = Some(f64::from(n.shadow_point));
+    m.highlight_point = Some(f64::from(n.highlight_point));
     let f = n.scan_clip_fractions;
-    m.scan_clip_fractions = Some((f[0] as f32, f[1] as f32, f[2] as f32));
+    m.scan_clip_fractions = Some((f[0], f[1], f[2]));
     n.image
 }

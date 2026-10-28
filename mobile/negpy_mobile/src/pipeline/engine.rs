@@ -37,10 +37,10 @@ pub struct RenderOutput {
 }
 
 /// The desktop's preview size: the unit of the pixel settings (`render_scale_factor`).
-pub const PREVIEW_RENDER_SIZE: f32 = 1600.0;
+pub const PREVIEW_RENDER_SIZE: f64 = 1600.0;
 
-pub fn render_scale_factor(shape: (usize, usize)) -> f32 {
-    shape.0.max(shape.1) as f32 / PREVIEW_RENDER_SIZE
+pub fn render_scale_factor(shape: (usize, usize)) -> f64 {
+    shape.0.max(shape.1) as f64 / PREVIEW_RENDER_SIZE
 }
 
 /// The engine on `img`, a scene-linear source, with a fresh context.
@@ -109,18 +109,18 @@ pub fn rebate_tone(cfg: &PipelineConfig, ctx: &PipelineContext) -> Vec<[f32; 3]>
     {
         return finish::linear_carrier_tone();
     }
-    let floors = [bounds.floors.0, bounds.floors.1, bounds.floors.2];
-    let ceils = [bounds.ceils.0, bounds.ceils.1, bounds.ceils.2];
-    let t = finish::carrier_tone_exposures();
-    let mut strip = Vec::with_capacity(t.len() * 3);
-    for &e in &t {
-        let lg = negpy_core::mathf::log10f(e.max(1e-6));
+    // The desktop builds the strip in float32: the bounds narrow first.
+    let floors = [bounds.floors.0, bounds.floors.1, bounds.floors.2].map(|v| v as f32);
+    let ceils = [bounds.ceils.0, bounds.ceils.1, bounds.ceils.2].map(|v| v as f32);
+    let lg = finish::carrier_tone_log_exposures();
+    let mut strip = Vec::with_capacity(lg.len() * 3);
+    for &lg in &lg {
         for c in 0..3 {
             strip.push(1.0 + (REBATE_BASE_MARGIN + lg) / (ceils[c] - floors[c]).max(1e-6));
         }
     }
-    let strip = Image::new(1, t.len(), strip);
-    let mut strip_ctx = PipelineContext::new((1, t.len()), 1.0, mode);
+    let strip = Image::new(1, lg.len(), strip);
+    let mut strip_ctx = PipelineContext::new((1, lg.len()), 1.0, mode);
     strip_ctx.metrics = ctx.metrics.clone();
     let mut tone_cfg = cfg.clone();
     tone_cfg.exposure.contrast_mask_strength = 0.0;

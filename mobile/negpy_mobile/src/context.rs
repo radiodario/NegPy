@@ -1,5 +1,6 @@
 //! What the stages pass to each other beside the pixels: the desktop's `PipelineContext`
-//! and the entries of its `metrics` dict that a later stage reads, as typed fields.
+//! and the entries of its `metrics` dict that a later stage reads, as typed fields. Scalars
+//! are `f64`, the desktop's Python floats; the planes are float32 pixel data.
 
 use crate::config::{ProcessMode, Rgb};
 use crate::image::{Image, Plane, Roi};
@@ -16,12 +17,12 @@ pub struct LogNegativeBounds {
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct GeometryParams {
     pub rotation: i32,
-    pub fine_rotation: f32,
+    pub fine_rotation: f64,
     pub flip_horizontal: bool,
     pub flip_vertical: bool,
-    pub converge_v: f32,
-    pub converge_h: f32,
-    pub distortion_k1: f32,
+    pub converge_v: f64,
+    pub converge_h: f64,
+    pub distortion_k1: f64,
 }
 
 /// The neutral axis Cast Removal balances on (`measure_neutral_axis_from_log`): per-channel
@@ -32,8 +33,8 @@ pub struct NeutralAxis {
     pub mid: Rgb,
     pub shadow: Rgb,
     pub highlight: Option<Rgb>,
-    pub confidence: f32,
-    pub offset_weight: Option<f32>,
+    pub confidence: f64,
+    pub offset_weight: Option<f64>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -46,27 +47,27 @@ pub struct Metrics {
     pub log_bounds_base: Option<LogNegativeBounds>,
     pub pre_trim_bounds: Option<LogNegativeBounds>,
     pub final_bounds: Option<LogNegativeBounds>,
-    pub norm_density_range: Option<f32>,
+    pub norm_density_range: Option<f64>,
     pub neutral_axis_refs: Option<NeutralAxis>,
-    pub metered_anchor: Option<f32>,
-    pub textural_range: Option<f32>,
-    pub shadow_point: Option<f32>,
-    pub highlight_point: Option<f32>,
+    pub metered_anchor: Option<f64>,
+    pub textural_range: Option<f64>,
+    pub shadow_point: Option<f64>,
+    pub highlight_point: Option<f64>,
     pub print_slopes: Option<Rgb>,
     pub contrast_mask_plane: Option<Plane>,
-    pub contrast_mask_centre: f32,
+    pub contrast_mask_centre: f64,
     pub contrast_mask_roi: Option<Roi>,
     pub diffusion_plane: Option<Image>,
     pub diffusion_roi: Option<Roi>,
     pub scan_clip_fractions: Option<Rgb>,
-    pub auto_masking: Option<f32>,
+    pub auto_masking: Option<f64>,
 }
 
 #[derive(Clone, Debug)]
 pub struct PipelineContext {
     pub original_size: (usize, usize),
     /// The buffer's long edge over the preview render size: the unit of the pixel settings.
-    pub scale_factor: f32,
+    pub scale_factor: f64,
     pub process_mode: ProcessMode,
     pub active_roi: Option<Roi>,
     pub crop_preview_full: bool,
@@ -76,7 +77,7 @@ pub struct PipelineContext {
 impl PipelineContext {
     pub fn new(
         original_size: (usize, usize),
-        scale_factor: f32,
+        scale_factor: f64,
         process_mode: ProcessMode,
     ) -> Self {
         Self {

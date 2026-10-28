@@ -7,8 +7,6 @@ use crate::config::Edit;
 use crate::image::Image;
 use crate::pipeline::engine::{self, EngineError};
 
-uniffi::setup_scaffolding!();
-
 #[derive(Debug, uniffi::Error)]
 #[uniffi(flat_error)]
 pub enum NegPyError {
@@ -53,7 +51,8 @@ impl Frame {
     /// Decodes a proxy PNG from the sync folder.
     #[uniffi::constructor]
     pub fn from_png(png: Vec<u8>) -> Result<Arc<Self>, NegPyError> {
-        let source = crate::proxy::decode_png(&png).map_err(|e| NegPyError::Decode(e.to_string()))?;
+        let source =
+            crate::proxy::decode_png(&png).map_err(|e| NegPyError::Decode(e.to_string()))?;
         Ok(Arc::new(Self { source }))
     }
 
@@ -72,7 +71,12 @@ impl Frame {
         let mut rgba = vec![0u8; out.image.width * out.image.height * 4];
         let mut q = vec![0u8; out.image.data.len()];
         negpy_core::convert::to_uint(&out.image.data, &mut q);
-        for (dst, src) in rgba.as_chunks_mut::<4>().0.iter_mut().zip(q.as_chunks::<3>().0) {
+        for (dst, src) in rgba
+            .as_chunks_mut::<4>()
+            .0
+            .iter_mut()
+            .zip(q.as_chunks::<3>().0)
+        {
             *dst = [src[0], src[1], src[2], 255];
         }
         Ok(Rendered {

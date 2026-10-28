@@ -445,12 +445,12 @@ pub fn apply_geometry(img: &Image, p: &GeometryParams) -> Image {
         cur = Cow::Owned(flipud(&cur));
     }
     if p.fine_rotation != 0.0 {
-        cur = Cow::Owned(apply_fine_rotation(&cur, p.fine_rotation as f64));
+        cur = Cow::Owned(apply_fine_rotation(&cur, p.fine_rotation));
     }
     if p.distortion_k1 != 0.0 {
-        cur = Cow::Owned(apply_radial_distortion(&cur, p.distortion_k1 as f64));
+        cur = Cow::Owned(apply_radial_distortion(&cur, p.distortion_k1));
     }
-    apply_keystone(&cur, p.converge_v as f64, p.converge_h as f64)
+    apply_keystone(&cur, p.converge_v, p.converge_h)
 }
 
 /// The geometry the config asks for, as the context records it.
@@ -473,9 +473,8 @@ pub fn geometry(img: &Image, cfg: &GeometryConfig, ctx: &mut PipelineContext) ->
     ctx.metrics.geometry = params;
 
     let (h, w) = out.shape();
-    let scale_factor = ctx.scale_factor as f64;
-    ctx.active_roi = if let Some((x1, y1, x2, y2)) = cfg.crop_rect {
-        let rect = (x1 as f64, y1 as f64, x2 as f64, y2 as f64);
+    let scale_factor = ctx.scale_factor;
+    ctx.active_roi = if let Some(rect) = cfg.crop_rect {
         Some(get_manual_rect_coords(
             (h, w),
             rect,
@@ -483,13 +482,8 @@ pub fn geometry(img: &Image, cfg: &GeometryConfig, ctx: &mut PipelineContext) ->
             scale_factor,
         ))
     } else if cfg.crop_to_valid && !cfg.crop_from_auto {
-        let valid = compute_geometry_crop_rect(
-            cfg.fine_rotation as f64,
-            cfg.converge_v as f64,
-            cfg.converge_h as f64,
-            w,
-            h,
-        );
+        let valid =
+            compute_geometry_crop_rect(cfg.fine_rotation, cfg.converge_v, cfg.converge_h, w, h);
         Some(get_manual_rect_coords(
             (h, w),
             valid,

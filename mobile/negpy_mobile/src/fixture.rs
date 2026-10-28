@@ -107,11 +107,7 @@ use crate::context::{GeometryParams, LogNegativeBounds, Metrics, NeutralAxis, Pi
 
 fn rgb_of(v: &Value) -> Option<Rgb> {
     let a = v.as_array()?;
-    Some((
-        a[0].as_f64()? as f32,
-        a[1].as_f64()? as f32,
-        a[2].as_f64()? as f32,
-    ))
+    Some((a[0].as_f64()?, a[1].as_f64()?, a[2].as_f64()?))
 }
 
 fn bounds_of(v: &Value) -> Option<LogNegativeBounds> {
@@ -131,8 +127,8 @@ fn roi_of(v: &Value) -> Option<Roi> {
     ))
 }
 
-fn f32_of(v: &Value) -> Option<f32> {
-    v.as_f64().map(|x| x as f32)
+fn f64_of(v: &Value) -> Option<f64> {
+    v.as_f64()
 }
 
 /// The desktop's `neutral_axis_refs`: (mid, shadow, highlight or null, confidence[, weight]).
@@ -142,8 +138,8 @@ pub fn neutral_axis_of(v: &Value) -> Option<NeutralAxis> {
         mid: rgb_of(&a[0])?,
         shadow: rgb_of(&a[1])?,
         highlight: rgb_of(&a[2]),
-        confidence: f32_of(&a[3])?,
-        offset_weight: a.get(4).and_then(f32_of),
+        confidence: f64_of(&a[3])?,
+        offset_weight: a.get(4).and_then(f64_of),
     })
 }
 
@@ -166,7 +162,7 @@ impl Fixture {
                 size[0].as_u64().unwrap() as usize,
                 size[1].as_u64().unwrap() as usize,
             ),
-            ctx["scale_factor"].as_f64().unwrap() as f32,
+            ctx["scale_factor"].as_f64().unwrap(),
             self.process_mode(),
         )
     }
@@ -181,12 +177,12 @@ impl Fixture {
         let metrics = Metrics {
             geometry: GeometryParams {
                 rotation: gp["rotation"].as_i64().unwrap_or(0) as i32,
-                fine_rotation: f32_of(&gp["fine_rotation"]).unwrap_or(0.0),
+                fine_rotation: f64_of(&gp["fine_rotation"]).unwrap_or(0.0),
                 flip_horizontal: gp["flip_horizontal"].as_bool().unwrap_or(false),
                 flip_vertical: gp["flip_vertical"].as_bool().unwrap_or(false),
-                converge_v: f32_of(&gp["converge_v"]).unwrap_or(0.0),
-                converge_h: f32_of(&gp["converge_h"]).unwrap_or(0.0),
-                distortion_k1: m.get("distortion_k1").and_then(f32_of).unwrap_or(0.0),
+                converge_v: f64_of(&gp["converge_v"]).unwrap_or(0.0),
+                converge_h: f64_of(&gp["converge_h"]).unwrap_or(0.0),
+                distortion_k1: m.get("distortion_k1").and_then(f64_of).unwrap_or(0.0),
             },
             active_roi: ctx.active_roi,
             base_log: m.get("base_log").and_then(rgb_of),
@@ -194,12 +190,12 @@ impl Fixture {
             log_bounds_base: m.get("log_bounds_base").and_then(bounds_of),
             pre_trim_bounds: m.get("pre_trim_bounds").and_then(bounds_of),
             final_bounds: m.get("final_bounds").and_then(bounds_of),
-            norm_density_range: m.get("norm_density_range").and_then(f32_of),
+            norm_density_range: m.get("norm_density_range").and_then(f64_of),
             neutral_axis_refs: m.get("neutral_axis_refs").and_then(neutral_axis_of),
-            metered_anchor: m.get("metered_anchor").and_then(f32_of),
-            textural_range: m.get("textural_range").and_then(f32_of),
-            shadow_point: m.get("shadow_point").and_then(f32_of),
-            highlight_point: m.get("highlight_point").and_then(f32_of),
+            metered_anchor: m.get("metered_anchor").and_then(f64_of),
+            textural_range: m.get("textural_range").and_then(f64_of),
+            shadow_point: m.get("shadow_point").and_then(f64_of),
+            highlight_point: m.get("highlight_point").and_then(f64_of),
             print_slopes: None,
             contrast_mask_plane: if self.has("metrics.contrast_mask_plane") {
                 Some(self.plane("metrics.contrast_mask_plane"))
@@ -208,7 +204,7 @@ impl Fixture {
             },
             contrast_mask_centre: m
                 .get("contrast_mask_centre")
-                .and_then(f32_of)
+                .and_then(f64_of)
                 .unwrap_or(0.5),
             contrast_mask_roi: m.get("contrast_mask_roi").and_then(roi_of),
             diffusion_plane: if self.has("metrics.diffusion_plane") {

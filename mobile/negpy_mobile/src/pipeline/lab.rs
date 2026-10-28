@@ -14,12 +14,6 @@ use crate::context::PipelineContext;
 use crate::image::Image;
 use crate::pipeline::working::WORKING_GAMMA;
 
-/// The desktop's float of a config field: the f32 widened through its shortest decimal, the
-/// value the user typed, where Python keeps a float64.
-pub fn wide(v: f32) -> f64 {
-    v.to_string().parse().unwrap_or_else(|_| f64::from(v))
-}
-
 // CIELAB in the working space (`kernel/image/logic.py`), on OpenCV's float Lab scale. The
 // literals are the desktop's, trailing zeros included.
 #[allow(clippy::excessive_precision)]
@@ -74,12 +68,12 @@ fn filled(img: &Image, fill: impl FnOnce(&[f32], (usize, usize), &mut [f32])) ->
 }
 
 /// `apply_clahe(img, strength)`: the L* channel equalized per tile; unchanged at strength 0.
-pub fn clahe(img: &Image, strength: f32) -> Image {
+pub fn clahe(img: &Image, strength: f64) -> Image {
     if strength <= 0.0 {
         return img.clone();
     }
     filled(img, |src, dims, dst| {
-        core::clahe(src, dims, wide(strength), working_lab(), dst)
+        core::clahe(src, dims, strength, working_lab(), dst)
     })
 }
 
@@ -89,8 +83,8 @@ pub fn clip01(img: &Image) -> Image {
 }
 
 /// `apply_saturation`: chroma scaled in CIELAB with the gamut knee, then skin protection.
-/// None where the desktop returns the input itself.
-pub fn saturation(img: &Image, saturation: f32, skin_protection: f32) -> Option<Image> {
+/// None where the desktop returns the input itself. The kernels take both scalars as f32.
+pub fn saturation(img: &Image, saturation: f64, skin_protection: f64) -> Option<Image> {
     if saturation == 1.0 && skin_protection <= 0.0 {
         return None;
     }
@@ -100,12 +94,12 @@ pub fn saturation(img: &Image, saturation: f32, skin_protection: f32) -> Option<
     color::rgb_to_lab(&img.data, &mut lab, to_lab);
     if saturation != 1.0 {
         let mut out = vec![0.0f32; n];
-        color::gamut_aware_chroma_scale(&lab, &mut out, saturation, 10, to_rgb);
+        color::gamut_aware_chroma_scale(&lab, &mut out, saturation as f32, 10, to_rgb);
         lab = out;
     }
     if skin_protection > 0.0 {
         let mut out = vec![0.0f32; n];
-        color::skin_chroma_rein(&lab, &mut out, skin_protection);
+        color::skin_chroma_rein(&lab, &mut out, skin_protection as f32);
         lab = out;
     }
     let mut rgb = vec![0.0f32; n];
@@ -133,7 +127,7 @@ pub fn auto_masking(img: &Image, cfg: &LabConfig) -> Option<f64> {
 
 /// `effective_masking(config, auto)`.
 pub fn effective_masking(cfg: &LabConfig, auto: Option<f64>) -> f64 {
-    let masking = wide(cfg.sharpen_masking);
+    let masking = cfg.sharpen_masking;
     match auto {
         None => masking,
         Some(auto) => (auto + masking - NEUTRAL_MASKING).clamp(0.0, 1.0),
@@ -186,7 +180,7 @@ pub fn rl_sharpening(img: &Image, amount: f64, radius: f64, masking: f64) -> Opt
 /// radius and effective masking.
 pub fn sharpening(img: &Image, cfg: &LabConfig, auto: Option<f64>) -> Option<Image> {
     let masking = effective_masking(cfg, auto);
-    let (amount, radius) = (wide(cfg.sharpen), wide(cfg.sharpen_radius));
+    let (amount, radius) = (cfg.sharpen, cfg.sharpen_radius);
     if cfg.sharpen_method == "rl" {
         rl_sharpening(img, amount, radius, masking)
     } else {
@@ -302,7 +296,7 @@ pub fn glow_and_halation(
 pub fn lab(img: &Image, cfg: &LabConfig, ctx: &mut PipelineContext) -> Image {
     let mut cur = Cow::Borrowed(img);
     if cfg.chroma_denoise > 0.0
-        && let Some(out) = chroma_denoise(&cur, wide(cfg.chroma_denoise), wide(ctx.scale_factor))
+        && let Some(out) = chroma_denoise(&cur, cfg.chroma_denoise, ctx.scale_factor)
     {
         cur = Cow::Owned(out);
     }
@@ -314,7 +308,7 @@ pub fn lab(img: &Image, cfg: &LabConfig, ctx: &mut PipelineContext) -> Image {
     if cfg.sharpen > 0.0 {
         let auto = auto_masking(&cur, cfg);
         if let Some(auto) = auto {
-            ctx.metrics.auto_masking = Some(auto as f32);
+            ctx.metrics.auto_masking = Some(auto);
         }
         if let Some(out) = sharpening(&cur, cfg, auto) {
             cur = Cow::Owned(out);
@@ -323,8 +317,8 @@ pub fn lab(img: &Image, cfg: &LabConfig, ctx: &mut PipelineContext) -> Image {
     if (cfg.glow_amount > 0.0 || cfg.halation_strength > 0.0)
         && let Some(out) = glow_and_halation(
             &cur,
-            wide(cfg.glow_amount),
-            wide(cfg.halation_strength),
+            cfg.glow_amount,
+            cfg.halation_strength,
             ctx.process_mode == ProcessMode::Bw,
         )
     {

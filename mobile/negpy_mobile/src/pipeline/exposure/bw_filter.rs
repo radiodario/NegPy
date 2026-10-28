@@ -1,9 +1,7 @@
 //! `features/exposure/bw_filter.py`: the weights a B&W print collapses the three channels with,
 //! a Wratten filter's on a color source.
 
-use crate::config::{BwFilter, ProcessMode};
-
-use super::Exposure;
+use crate::config::{BwFilter, ExposureConfig, ProcessMode};
 
 /// R, G, B weights on the normalized log channels; each row sums to exactly 1.
 pub fn bw_filter_weights(filter: BwFilter) -> (f64, f64, f64) {
@@ -47,7 +45,7 @@ pub fn plane_weights(
 }
 
 /// The exposure the print renders: B&W drops the color filtration.
-pub fn printed_exposure(mode: ProcessMode, exposure: &Exposure) -> Exposure {
+pub fn printed_exposure(mode: ProcessMode, exposure: &ExposureConfig) -> ExposureConfig {
     let mut ex = exposure.clone();
     if mode == ProcessMode::Bw {
         ex.wb_cyan = 0.0;

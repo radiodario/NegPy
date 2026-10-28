@@ -2,7 +2,6 @@
 //! mapped through the frame's geometry (`geometry/logic.py::map_coords_to_geometry`).
 
 use negpy_core::shapes::{self, MaskAlpha};
-use serde::Deserialize;
 
 use crate::config::{LocalMask, MaskKey, MaskShape};
 use crate::context::GeometryParams;
@@ -11,51 +10,6 @@ pub const MAX_KEYED_MASKS: usize = 4;
 const OVAL_SAMPLES: usize = 64;
 const KEYSTONE_EPS: f64 = 1e-4;
 const DISTORT_EPS: f64 = 1e-6;
-
-/// `LocalMask` at the desktop's float64.
-#[derive(Clone, Debug, PartialEq, Deserialize)]
-#[serde(default)]
-pub struct LocalMask64 {
-    pub vertices: Vec<(f64, f64)>,
-    pub stops: f64,
-    pub feather: f64,
-    pub grade: f64,
-    pub flash: f64,
-    pub shape: MaskShape,
-    pub invert: bool,
-    pub enabled: bool,
-    pub key: MaskKey,
-    pub key_zone: f64,
-    pub key_softness: f64,
-}
-
-impl From<&LocalMask> for LocalMask64 {
-    fn from(m: &LocalMask) -> Self {
-        Self {
-            vertices: m
-                .vertices
-                .iter()
-                .map(|&(x, y)| (x as f64, y as f64))
-                .collect(),
-            stops: m.stops as f64,
-            feather: m.feather as f64,
-            grade: m.grade as f64,
-            flash: m.flash as f64,
-            shape: m.shape,
-            invert: m.invert,
-            enabled: m.enabled,
-            key: m.key,
-            key_zone: m.key_zone as f64,
-            key_softness: m.key_softness as f64,
-        }
-    }
-}
-
-impl Default for LocalMask64 {
-    fn default() -> Self {
-        (&LocalMask::default()).into()
-    }
-}
 
 /// The minimum number of vertices that this shape needs.
 pub fn min_points(shape: MaskShape) -> usize {
@@ -165,7 +119,7 @@ fn mask_spec(
 }
 
 /// Indices of the tone-limited masks that get a shape plane, in plane order.
-pub fn limited_indices(masks: &[LocalMask64]) -> Vec<usize> {
+pub fn limited_indices(masks: &[LocalMask]) -> Vec<usize> {
     masks
         .iter()
         .enumerate()
@@ -178,7 +132,7 @@ pub fn limited_indices(masks: &[LocalMask64]) -> Vec<usize> {
 }
 
 /// The tone-limited masks in plane order.
-pub fn limited_masks(masks: &[LocalMask64]) -> Vec<&LocalMask64> {
+pub fn limited_masks(masks: &[LocalMask]) -> Vec<&LocalMask> {
     limited_indices(masks)
         .into_iter()
         .map(|i| &masks[i])
@@ -217,7 +171,7 @@ impl LocalMaps {
 
 /// Per-pixel dodge/burn maps for a render of `h` x `w` from masks drawn on the raw frame.
 pub fn compute_local_maps(
-    masks: &[LocalMask64],
+    masks: &[LocalMask],
     h: usize,
     w: usize,
     orig_shape: (usize, usize),
@@ -267,7 +221,7 @@ pub fn map_coords_to_geometry(
 ) -> (f64, f64) {
     let (px, py, w, h) = pre_keystone_point(nx, ny, orig_shape, geo);
     let (px, py) = if geo.converge_v != 0.0 || geo.converge_h != 0.0 {
-        map_point_keystone(px, py, geo.converge_v as f64, geo.converge_h as f64, w, h)
+        map_point_keystone(px, py, geo.converge_v, geo.converge_h, w, h)
     } else {
         (px, py)
     };
@@ -304,11 +258,11 @@ fn pre_keystone_point(
     }
     if geo.fine_rotation != 0.0 {
         let center = ((w / 2.0) as f32, (h / 2.0) as f32);
-        let m = negpy_core::warp::rotation_matrix(center, geo.fine_rotation as f64, 1.0);
+        let m = negpy_core::warp::rotation_matrix(center, geo.fine_rotation, 1.0);
         (px, py) = (m[0] * px + m[1] * py + m[2], m[3] * px + m[4] * py + m[5]);
     }
     if geo.distortion_k1 != 0.0 {
-        (px, py) = map_point_radial(px, py, geo.distortion_k1 as f64, w, h);
+        (px, py) = map_point_radial(px, py, geo.distortion_k1, w, h);
     }
     (px, py, w, h)
 }

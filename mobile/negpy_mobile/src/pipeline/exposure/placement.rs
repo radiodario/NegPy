@@ -2,17 +2,17 @@
 //! forward model (`curve_params_from_metrics` -> `print_curve` -> `print_curve_output` ->
 //! `zone_of_encoded`) on a grid, as the desktop does. The zone solver itself is UI.
 
-use crate::config::{MaskKey, ProcessMode};
+use crate::config::{ExposureConfig, LocalMask, MaskKey, ProcessMode};
 use crate::pipeline::papers::{PaperProfile, effective_constants, effective_paper_profile};
 use crate::pipeline::working::WORKING_GAMMA;
 
+use super::ExposureMetrics;
 use super::curve::{
     CurveParams, black_hold_taper, cast_solve_inputs, effective_midtone_gamma, grade_coupled_shape,
     highlight_hold_offset, per_channel_curve_params, preflash_params, preflash_value,
     reference_linear_value, shadow_hold_offset, split_grade_deltas,
 };
-use super::local::{LocalMask64, limited_masks};
-use super::{Exposure, ExposureMetrics};
+use super::local::limited_masks;
 
 pub const ZONE_MID_REFLECTANCE: f32 = 0.18;
 const KEY_GRID_N: usize = 512;
@@ -218,7 +218,7 @@ impl CharacteristicCurve {
 /// The achromatic print curve for `exposure` at `slope`/`pivot`; a None density takes the
 /// exposure's own.
 pub fn print_curve(
-    exposure: &Exposure,
+    exposure: &ExposureConfig,
     slope: f64,
     pivot: f64,
     mode: ProcessMode,
@@ -299,7 +299,7 @@ pub fn zone_of_encoded(enc: f64) -> f64 {
 
 /// (slopes, pivots, curvatures) the render solved for, from the metrics it published.
 pub fn curve_params_from_metrics(
-    exposure: &Exposure,
+    exposure: &ExposureConfig,
     mode: ProcessMode,
     metrics: &ExposureMetrics,
 ) -> CurveParams {
@@ -346,7 +346,7 @@ pub fn curve_params_from_metrics(
 
 /// The shadow hold lift the render applied, from the published metrics.
 pub fn auto_shadow_from_metrics(
-    exposure: &Exposure,
+    exposure: &ExposureConfig,
     mode: ProcessMode,
     metrics: &ExposureMetrics,
 ) -> f64 {
@@ -373,7 +373,7 @@ pub fn auto_shadow_from_metrics(
 
 /// The highlight hold burn the render applied, from the published metrics.
 pub fn auto_highlight_from_metrics(
-    exposure: &Exposure,
+    exposure: &ExposureConfig,
     mode: ProcessMode,
     metrics: &ExposureMetrics,
 ) -> f64 {
@@ -404,7 +404,7 @@ pub fn auto_highlight_from_metrics(
 
 /// Zones the achromatic print curve puts normalized-log `vals` on under `exposure`.
 fn zones_of(
-    exposure: &Exposure,
+    exposure: &ExposureConfig,
     mode: ProcessMode,
     metrics: &ExposureMetrics,
     vals: &[f64],
@@ -428,7 +428,7 @@ fn zones_of(
 
 /// Zone the achromatic print curve puts `val_luma` on under `exposure`.
 pub fn predicted_zone(
-    exposure: &Exposure,
+    exposure: &ExposureConfig,
     mode: ProcessMode,
     metrics: &ExposureMetrics,
     val_luma: f64,
@@ -474,8 +474,8 @@ fn key_grid() -> Vec<f64> {
 
 /// A tone-limited mask's weight edges in normalized-log luma: weight 0 at e0, 1 at e1.
 pub fn key_edges(
-    mask: &LocalMask64,
-    exposure: &Exposure,
+    mask: &LocalMask,
+    exposure: &ExposureConfig,
     mode: ProcessMode,
     metrics: &ExposureMetrics,
 ) -> (f64, f64) {
@@ -496,8 +496,8 @@ pub fn key_edges(
 
 /// (stops, ISO-R delta, e0, e1) per tone-limited mask, in plane order; None when there is none.
 pub fn limited_mask_params(
-    masks: &[LocalMask64],
-    exposure: &Exposure,
+    masks: &[LocalMask],
+    exposure: &ExposureConfig,
     mode: ProcessMode,
     metrics: &ExposureMetrics,
 ) -> Option<Vec<[f64; 4]>> {

@@ -46,12 +46,12 @@ fn geometry_matches_every_fixture() {
         let gp = &m["geometry_params"];
         let want_params = GeometryParams {
             rotation: gp["rotation"].as_i64().unwrap() as i32,
-            fine_rotation: gp["fine_rotation"].as_f64().unwrap() as f32,
+            fine_rotation: gp["fine_rotation"].as_f64().unwrap(),
             flip_horizontal: gp["flip_horizontal"].as_bool().unwrap(),
             flip_vertical: gp["flip_vertical"].as_bool().unwrap(),
-            converge_v: gp["converge_v"].as_f64().unwrap() as f32,
-            converge_h: gp["converge_h"].as_f64().unwrap() as f32,
-            distortion_k1: m["distortion_k1"].as_f64().unwrap() as f32,
+            converge_v: gp["converge_v"].as_f64().unwrap(),
+            converge_h: gp["converge_h"].as_f64().unwrap(),
+            distortion_k1: m["distortion_k1"].as_f64().unwrap(),
         };
         assert_eq!(ctx.metrics.geometry, want_params, "{name}: geometry_params");
     }

@@ -3,8 +3,7 @@
 //! Hue Trim (`features/exposure/processor.py::PhotometricProcessor`). The transparency
 //! transfer (an E-6 print) is not this stage's: the caller routes a slide elsewhere.
 //!
-//! The scalar inputs are read at float64 (`ExposureInputs`), as the desktop's Python floats,
-//! so a caller that holds them at that precision renders the desktop's bits.
+//! The scalar inputs (`ExposureInputs`) are the desktop's Python floats, at f64.
 
 pub mod bw_filter;
 pub mod curve;
@@ -12,10 +11,7 @@ pub mod hue;
 pub mod local;
 pub mod placement;
 
-use serde::{Deserialize, Deserializer};
-use serde_json::{Map, Value};
-
-use crate::config::{BwFilter, ExposureConfig, PipelineConfig, ProcessMode, RenderIntent};
+use crate::config::{ExposureConfig, LocalMask, PipelineConfig, ProcessMode, RenderIntent};
 use crate::context::{Metrics, PipelineContext};
 use crate::image::Image;
 use crate::pipeline::constants::EXPOSURE_CONSTANTS;
@@ -24,167 +20,10 @@ use crate::pipeline::papers::{UnsupportedStock, effective_paper_profile, resolve
 pub use bw_filter::{collapse_matrix, collapse_weights, plane_weights, printed_exposure};
 pub use curve::*;
 pub use hue::apply_hue_trim;
-pub use local::{LocalMaps, LocalMask64, compute_local_maps};
+pub use local::{LocalMaps, compute_local_maps};
 pub use placement::limited_mask_params;
 
-fn lenient<'de, D: Deserializer<'de>, T: Deserialize<'de> + Default>(d: D) -> Result<T, D::Error> {
-    Ok(T::deserialize(d).unwrap_or_default())
-}
-
-/// `ExposureConfig` at the desktop's float64.
-#[derive(Clone, Debug, PartialEq, Deserialize)]
-#[serde(default)]
-pub struct Exposure {
-    pub density: f64,
-    pub grade: f64,
-    pub grade_trim_red: f64,
-    pub grade_trim_green: f64,
-    pub grade_trim_blue: f64,
-    pub wb_cyan: f64,
-    pub wb_magenta: f64,
-    pub wb_yellow: f64,
-    pub shadow_cyan: f64,
-    pub shadow_magenta: f64,
-    pub shadow_yellow: f64,
-    pub highlight_cyan: f64,
-    pub highlight_magenta: f64,
-    pub highlight_yellow: f64,
-    pub shadow_density: f64,
-    pub highlight_density: f64,
-    pub hold_black: bool,
-    pub contrast_mask_strength: f64,
-    pub diffusion: f64,
-    pub shadow_grade: f64,
-    pub highlight_grade: f64,
-    pub shadow_grade_trim_red: f64,
-    pub shadow_grade_trim_green: f64,
-    pub shadow_grade_trim_blue: f64,
-    pub highlight_grade_trim_red: f64,
-    pub highlight_grade_trim_green: f64,
-    pub highlight_grade_trim_blue: f64,
-    pub toe: f64,
-    pub toe_width: f64,
-    pub shoulder: f64,
-    pub shoulder_width: f64,
-    pub toe_trim_red: f64,
-    pub toe_trim_green: f64,
-    pub toe_trim_blue: f64,
-    pub shoulder_trim_red: f64,
-    pub shoulder_trim_green: f64,
-    pub shoulder_trim_blue: f64,
-    pub toe_width_trim_red: f64,
-    pub toe_width_trim_green: f64,
-    pub toe_width_trim_blue: f64,
-    pub shoulder_width_trim_red: f64,
-    pub shoulder_width_trim_green: f64,
-    pub shoulder_width_trim_blue: f64,
-    pub paper_dmin: bool,
-    pub paper_black: bool,
-    pub midtone_gamma: f64,
-    pub midtone_gamma_trim_red: f64,
-    pub midtone_gamma_trim_green: f64,
-    pub midtone_gamma_trim_blue: f64,
-    pub preflash: f64,
-    pub cast_removal_strength: f64,
-    pub auto_exposure: bool,
-    pub auto_normalize_contrast: bool,
-    pub render_intent: RenderIntent,
-    pub paper_profile: String,
-    pub dye_separation: f64,
-    pub dye_separation_trim_red: f64,
-    pub dye_separation_trim_green: f64,
-    pub dye_separation_trim_blue: f64,
-    pub separation_damping: f64,
-    #[serde(deserialize_with = "lenient")]
-    pub bw_filter: BwFilter,
-}
-
-impl From<&ExposureConfig> for Exposure {
-    fn from(c: &ExposureConfig) -> Self {
-        Self {
-            density: c.density as f64,
-            grade: c.grade as f64,
-            grade_trim_red: c.grade_trim_red as f64,
-            grade_trim_green: c.grade_trim_green as f64,
-            grade_trim_blue: c.grade_trim_blue as f64,
-            wb_cyan: c.wb_cyan as f64,
-            wb_magenta: c.wb_magenta as f64,
-            wb_yellow: c.wb_yellow as f64,
-            shadow_cyan: c.shadow_cyan as f64,
-            shadow_magenta: c.shadow_magenta as f64,
-            shadow_yellow: c.shadow_yellow as f64,
-            highlight_cyan: c.highlight_cyan as f64,
-            highlight_magenta: c.highlight_magenta as f64,
-            highlight_yellow: c.highlight_yellow as f64,
-            shadow_density: c.shadow_density as f64,
-            highlight_density: c.highlight_density as f64,
-            hold_black: c.hold_black,
-            contrast_mask_strength: c.contrast_mask_strength as f64,
-            diffusion: c.diffusion as f64,
-            shadow_grade: c.shadow_grade as f64,
-            highlight_grade: c.highlight_grade as f64,
-            shadow_grade_trim_red: c.shadow_grade_trim_red as f64,
-            shadow_grade_trim_green: c.shadow_grade_trim_green as f64,
-            shadow_grade_trim_blue: c.shadow_grade_trim_blue as f64,
-            highlight_grade_trim_red: c.highlight_grade_trim_red as f64,
-            highlight_grade_trim_green: c.highlight_grade_trim_green as f64,
-            highlight_grade_trim_blue: c.highlight_grade_trim_blue as f64,
-            toe: c.toe as f64,
-            toe_width: c.toe_width as f64,
-            shoulder: c.shoulder as f64,
-            shoulder_width: c.shoulder_width as f64,
-            toe_trim_red: c.toe_trim_red as f64,
-            toe_trim_green: c.toe_trim_green as f64,
-            toe_trim_blue: c.toe_trim_blue as f64,
-            shoulder_trim_red: c.shoulder_trim_red as f64,
-            shoulder_trim_green: c.shoulder_trim_green as f64,
-            shoulder_trim_blue: c.shoulder_trim_blue as f64,
-            toe_width_trim_red: c.toe_width_trim_red as f64,
-            toe_width_trim_green: c.toe_width_trim_green as f64,
-            toe_width_trim_blue: c.toe_width_trim_blue as f64,
-            shoulder_width_trim_red: c.shoulder_width_trim_red as f64,
-            shoulder_width_trim_green: c.shoulder_width_trim_green as f64,
-            shoulder_width_trim_blue: c.shoulder_width_trim_blue as f64,
-            paper_dmin: c.paper_dmin,
-            paper_black: c.paper_black,
-            midtone_gamma: c.midtone_gamma as f64,
-            midtone_gamma_trim_red: c.midtone_gamma_trim_red as f64,
-            midtone_gamma_trim_green: c.midtone_gamma_trim_green as f64,
-            midtone_gamma_trim_blue: c.midtone_gamma_trim_blue as f64,
-            preflash: c.preflash as f64,
-            cast_removal_strength: c.cast_removal_strength as f64,
-            auto_exposure: c.auto_exposure,
-            auto_normalize_contrast: c.auto_normalize_contrast,
-            render_intent: c.render_intent,
-            paper_profile: c.paper_profile.clone(),
-            dye_separation: c.dye_separation as f64,
-            dye_separation_trim_red: c.dye_separation_trim_red as f64,
-            dye_separation_trim_green: c.dye_separation_trim_green as f64,
-            dye_separation_trim_blue: c.dye_separation_trim_blue as f64,
-            separation_damping: c.separation_damping as f64,
-            bw_filter: c.bw_filter,
-        }
-    }
-}
-
-impl Default for Exposure {
-    fn default() -> Self {
-        (&ExposureConfig::default()).into()
-    }
-}
-
-impl Exposure {
-    /// The exposure fields of a flat dict, at the precision the desktop stored them.
-    pub fn from_flat(flat: &Map<String, Value>) -> Self {
-        let mut ex: Self = serde_json::from_value(Value::Object(flat.clone())).unwrap_or_default();
-        if ex.grade <= 5.0 {
-            ex.grade = 150.0 - 20.0 * ex.grade;
-        }
-        ex
-    }
-}
-
-/// The base stage's scalar metrics the curve is solved from, at float64.
+/// The base stage's scalar metrics the curve is solved from.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ExposureMetrics {
     pub final_bounds: Option<Bounds64>,
@@ -203,13 +42,13 @@ impl From<&Metrics> for ExposureMetrics {
         Self {
             final_bounds: m.final_bounds.map(Into::into),
             log_bounds: m.log_bounds.map(Into::into),
-            norm_density_range: m.norm_density_range.map(f64::from),
-            metered_anchor: m.metered_anchor.map(f64::from),
-            textural_range: m.textural_range.map(f64::from),
-            shadow_point: m.shadow_point.map(f64::from),
-            highlight_point: m.highlight_point.map(f64::from),
+            norm_density_range: m.norm_density_range,
+            metered_anchor: m.metered_anchor,
+            textural_range: m.textural_range,
+            shadow_point: m.shadow_point,
+            highlight_point: m.highlight_point,
             neutral_axis_refs: m.neutral_axis_refs.as_ref().map(Into::into),
-            contrast_mask_centre: m.contrast_mask_centre as f64,
+            contrast_mask_centre: m.contrast_mask_centre,
         }
     }
 }
@@ -217,22 +56,22 @@ impl From<&Metrics> for ExposureMetrics {
 /// Everything the stage reads beside the pixels and the context's planes.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExposureInputs {
-    pub exposure: Exposure,
+    pub exposure: ExposureConfig,
     pub process_mode: ProcessMode,
     pub source_color: Option<bool>,
     pub hue_trim: f64,
-    pub masks: Vec<LocalMask64>,
+    pub masks: Vec<LocalMask>,
     pub metrics: ExposureMetrics,
 }
 
 impl ExposureInputs {
     pub fn new(cfg: &PipelineConfig, ctx: &PipelineContext) -> Self {
         Self {
-            exposure: (&cfg.exposure).into(),
+            exposure: cfg.exposure.clone(),
             process_mode: cfg.process.process_mode,
             source_color: cfg.process.source_color,
-            hue_trim: cfg.process.hue_trim as f64,
-            masks: cfg.local.masks.iter().map(Into::into).collect(),
+            hue_trim: cfg.process.hue_trim,
+            masks: cfg.local.masks.clone(),
             metrics: (&ctx.metrics).into(),
         }
     }
@@ -248,7 +87,7 @@ pub fn exposure(
     exposure_with(img, &inputs, ctx)
 }
 
-/// `exposure` from inputs already at float64.
+/// `exposure` from its scalar inputs.
 pub fn exposure_with(
     img: &Image,
     inputs: &ExposureInputs,
@@ -285,9 +124,9 @@ fn luminance_rgb(img: &Image) -> Image {
 
 fn process_print(
     img: &Image,
-    ex: &Exposure,
+    ex: &ExposureConfig,
     weights: (f64, f64, f64),
-    masks: &[LocalMask64],
+    masks: &[LocalMask],
     m: &ExposureMetrics,
     ctx: &mut PipelineContext,
 ) -> Result<Image, UnsupportedStock> {
@@ -323,7 +162,7 @@ fn process_print(
         Some(mg),
     );
     let (slopes, pivots) = (params.slopes, params.pivots);
-    ctx.metrics.print_slopes = Some((slopes[0] as f32, slopes[1] as f32, slopes[2] as f32));
+    ctx.metrics.print_slopes = Some((slopes[0], slopes[1], slopes[2]));
     let hl_auto = match m.highlight_point {
         Some(point) if ex.auto_normalize_contrast => highlight_hold_offset(
             slopes[1],
@@ -519,7 +358,7 @@ fn process_print(
 /// The flat log master: the normalized log signal with the manual WB and the stock's matrix.
 fn process_flat(
     img: &Image,
-    ex: &Exposure,
+    ex: &ExposureConfig,
     weights: (f64, f64, f64),
     ctx: &PipelineContext,
 ) -> Result<Image, UnsupportedStock> {

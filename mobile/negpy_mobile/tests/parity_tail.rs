@@ -3,7 +3,7 @@
 
 use negpy_mobile::config::AltProcess;
 use negpy_mobile::fixture::{Fixture, fixture_names};
-use negpy_mobile::pipeline::{altprocess, finish, lab};
+use negpy_mobile::pipeline::{altprocess, engine, finish, lab};
 
 /// The cases that ran the creative stages (the flat intent skips them).
 fn tail_cases() -> Vec<(String, Fixture)> {
@@ -137,4 +137,23 @@ fn the_paper_margin_is_the_mat_color() {
         finish::effective_paper_linear(&cfg.finish, &cfg.toning),
         (1.0, 1.0, 1.0)
     );
+}
+
+#[test]
+fn the_rebate_tone_matches_the_desktop() {
+    let f = case("c41_carrier");
+    let cfg = f.edit().config;
+    let ctx = f.context_after_base();
+    let (shape, want) = f.array("rebate_tone");
+    assert_eq!(shape, [finish::CARRIER_TONE_SAMPLES, 3]);
+    let got = engine::rebate_tone(&cfg, &ctx);
+    let off: Vec<_> = got
+        .iter()
+        .flatten()
+        .zip(&want)
+        .enumerate()
+        .filter(|(_, (a, b))| a != b)
+        .map(|(i, (a, b))| (i, *a, *b))
+        .collect();
+    assert!(off.is_empty(), "rebate_tone entries differ: {off:?}");
 }
