@@ -679,3 +679,37 @@ impl Edit {
         serde_json::to_string(&Value::Object(self.flat.clone())).expect("flat dict serializes")
     }
 }
+
+impl PipelineConfig {
+    /// The sections as one flat dict, the shape the desktop stores. Local masks nest under
+    /// `local_masks`, as `WorkspaceConfig.to_dict` writes them.
+    pub fn to_flat(&self) -> Map<String, Value> {
+        let mut flat = Map::new();
+        for section in [
+            serde_json::to_value(&self.process),
+            serde_json::to_value(&self.exposure),
+            serde_json::to_value(&self.geometry),
+            serde_json::to_value(&self.lab),
+            serde_json::to_value(&self.altproc),
+            serde_json::to_value(&self.toning),
+            serde_json::to_value(&self.finish),
+            serde_json::to_value(&self.export),
+        ] {
+            if let Ok(Value::Object(m)) = section {
+                flat.extend(m);
+            }
+        }
+        flat.insert(
+            "local_masks".into(),
+            serde_json::to_value(&self.local).unwrap_or(Value::Null),
+        );
+        flat
+    }
+}
+
+/// The default edit as flat JSON: every pipeline field at the desktop's default. The desktop
+/// fills the sections this crate does not carry when it reads the record.
+pub fn default_edit_json() -> String {
+    serde_json::to_string(&Value::Object(PipelineConfig::default().to_flat()))
+        .expect("defaults serialize")
+}

@@ -67,3 +67,23 @@ fn legacy_values_read_as_the_desktop_reads_them() {
     );
     assert_eq!(cfg.exposure.grade, 110.0);
 }
+
+#[test]
+fn the_default_edit_reads_back_as_the_defaults() {
+    let text = negpy_mobile::config::default_edit_json();
+    let edit = Edit::from_json(&text).unwrap();
+    assert_eq!(edit.config, PipelineConfig::default());
+    let desktop = defaults();
+    for (key, value) in edit.flat.iter() {
+        if key == "local_masks" {
+            continue;
+        }
+        let d = desktop
+            .get(key)
+            .unwrap_or_else(|| panic!("{key} is not a desktop field"));
+        match (d.as_f64(), value.as_f64()) {
+            (Some(a), Some(b)) => assert!((a - b).abs() <= 1e-6 * a.abs().max(1.0), "{key}"),
+            _ => assert_eq!(d, value, "{key}"),
+        }
+    }
+}

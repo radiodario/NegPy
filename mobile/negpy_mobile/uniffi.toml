@@ -1,0 +1,4 @@
+[bindings.swift]
+module_name = "NegPyCore"
+ffi_module_name = "NegPyCoreFFI"
+generate_module_map = true

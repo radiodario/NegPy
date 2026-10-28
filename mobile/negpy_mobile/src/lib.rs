@@ -8,5 +8,8 @@ pub mod image;
 pub mod pipeline;
 pub mod proxy;
 
+#[cfg(feature = "ffi")]
+pub mod ffi;
+
 #[doc(hidden)]
 pub mod fixture;

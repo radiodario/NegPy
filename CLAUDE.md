@@ -49,6 +49,10 @@ Edits persist in SQLite (`edits.db`, keyed by content hash), optionally mirrored
 
 **Roll-scoped edit fork**: a photo in more than one Roll has one edit, unless a per-frame fork gives it its own edit for one Roll. A fork is the content hash suffixed `#roll:<id>` (`roll_edit_hash`), like a half-frame's `#N`. Triage marks and legacy-hash migration strip the suffix (`unforked_hash`), because they belong to the physical scan.
 
+**Device sync** (`services/sync/`): the edits database never leaves the Mac. The sync folder holds one JSON record per content hash plus a 16-bit linear PNG proxy; the newest `modified_at` wins, and `file_settings.modified_at` is that time on the Mac (`save_file_settings_json` writes a pulled record with the record's own time, so it never echoes back). `desktop/sync_runner.py` runs the pass on a timer.
+
+**Mobile** (`mobile/`): `negpy_mobile` is the Rust port of the CPU pipeline for the iOS app, on the same `negpy_core` kernels, reading the same flat edit dict. A pipeline change on the desktop re-runs `mobile/scripts/make_fixtures.py` and `cargo test` in `mobile/negpy_mobile`, whose parity tests hold the desktop's pixels bit for bit. `mobile/README.md` has the parts and the build.
+
 **Film edge print** (`services/film_edge/`): a stock's own marks, DX number and respool source (`prints_as`) are the `edge` object in `gear/film_stocks.json`, and each entry names its `source`. The `edge-print-from-photo` skill adds a stock from a photo of the film.
 
 ### negpy_core (Rust)
