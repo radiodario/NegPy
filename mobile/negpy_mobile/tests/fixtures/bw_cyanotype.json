@@ -1,0 +1,482 @@
+{
+ "arrays": {
+  "base": {
+   "file": "bw_cyanotype.base.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  },
+  "clahe": {
+   "file": "bw_cyanotype.clahe.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  },
+  "crop": {
+   "file": "bw_cyanotype.crop.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  },
+  "encoded": {
+   "file": "bw_cyanotype.encoded.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  },
+  "exposure": {
+   "file": "bw_cyanotype.exposure.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  },
+  "final": {
+   "file": "bw_cyanotype.final.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  },
+  "finish": {
+   "file": "bw_cyanotype.finish.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  },
+  "geometry": {
+   "file": "bw_cyanotype.geometry.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  },
+  "lab": {
+   "file": "bw_cyanotype.lab.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  },
+  "print": {
+   "file": "bw_cyanotype.print.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  },
+  "source": {
+   "file": "bw_cyanotype.source.f32",
+   "shape": [
+    72,
+    108,
+    3
+   ]
+  }
+ },
+ "config": {
+  "align": true,
+  "alt_process": "cyanotype",
+  "analysis_buffer": 0.05,
+  "analysis_rect": null,
+  "apply": false,
+  "auto_exposure": true,
+  "auto_normalize_contrast": true,
+  "autocrop_mode": "image",
+  "autocrop_offset": 0,
+  "autocrop_ratio": "Free",
+  "autocrop_rebate_trim": 1.0,
+  "autocrop_square": false,
+  "autocrop_squared": false,
+  "baseline_source": "",
+  "black_point_offset": 0.0,
+  "black_point_trim_blue": 0.0,
+  "black_point_trim_green": 0.0,
+  "black_point_trim_red": 0.0,
+  "blue_path": "",
+  "blue_strength": 0.0,
+  "border_bottom_weight": 1.0,
+  "border_color": "#ffffff",
+  "border_match_paper": false,
+  "border_size": 0.0,
+  "bw_filter": "none",
+  "camera_id": "",
+  "camera_make": "",
+  "camera_model": "",
+  "capture_date": "",
+  "capture_frame": null,
+  "capture_roll": "",
+  "carrier_corner": 0.25,
+  "carrier_flare": 0.5,
+  "carrier_rough": 0.25,
+  "carrier_width": 0.0,
+  "cast_removal_strength": 0.5,
+  "chroma_denoise": 0.0,
+  "clahe_strength": 0.0,
+  "clone_feather": 0.5,
+  "clone_match_tone": true,
+  "clone_strength": 1.0,
+  "clone_strokes": [],
+  "color_range_clip": 1.0,
+  "contact_sheet_output_path": "",
+  "contrast_mask_strength": 0.0,
+  "converge_h": 0.0,
+  "converge_v": 0.0,
+  "copper_strength": 0.0,
+  "crop_detect_key": "",
+  "crop_from_auto": false,
+  "crop_rect": null,
+  "crop_to_valid": false,
+  "crosstalk_matrix": null,
+  "crosstalk_process": "Color Negative",
+  "crosstalk_profile": "Generic C41",
+  "crosstalk_strength": 0.0,
+  "cyano_bleach": 0.0,
+  "cyano_exposure": 0.0,
+  "cyano_scale": 1.4,
+  "cyano_sensitizer": "classic",
+  "cyano_tannin": 0.0,
+  "demosaic_export": "Auto",
+  "demosaic_preview": "Auto",
+  "density": 1.0,
+  "description_fields": null,
+  "developer": "",
+  "diffusion": 0.0,
+  "distortion_k1": 0.0,
+  "dust_exclusion_strokes": [],
+  "dust_hair_threshold": 0.66,
+  "dust_remove": false,
+  "dust_size": 4,
+  "dust_threshold": 0.66,
+  "dye_separation": 1.0,
+  "dye_separation_trim_blue": 0.0,
+  "dye_separation_trim_green": 0.0,
+  "dye_separation_trim_red": 0.0,
+  "enabled": false,
+  "export_bit_depth": 16,
+  "export_color_space": "sRGB",
+  "export_dpi": 300,
+  "export_fmt": "JPEG",
+  "export_path": "/root/Documents/NegPy/export",
+  "export_print_size": 30.0,
+  "export_resolution_mode": "original",
+  "export_sidecars_enabled": false,
+  "export_target_long_edge_px": 2000,
+  "exposure_override": "",
+  "filename_pattern": "{{ original_name }}",
+  "film": "",
+  "film_base": null,
+  "film_color_type": "",
+  "film_iso": null,
+  "film_manufacturer": "",
+  "film_stock_id": "",
+  "fine_rotation": 0.0,
+  "flip_horizontal": false,
+  "flip_vertical": false,
+  "focal_length_mm": null,
+  "format": "",
+  "format_other": "",
+  "glow_amount": 0.0,
+  "gold_strength": 0.0,
+  "gps_latitude": null,
+  "gps_longitude": null,
+  "grade": 115.0,
+  "grade_trim_blue": 0.0,
+  "grade_trim_green": 0.0,
+  "grade_trim_red": 0.0,
+  "green_path": "",
+  "halation_strength": 0.0,
+  "hdr_align": true,
+  "hdr_anchor": "",
+  "hdr_anchor_ev": 1.0,
+  "hdr_enabled": false,
+  "hdr_paths": [],
+  "hdr_ratios": [],
+  "highlight_cyan": 0.0,
+  "highlight_density": 0.0,
+  "highlight_grade": 0.0,
+  "highlight_grade_trim_blue": 0.0,
+  "highlight_grade_trim_green": 0.0,
+  "highlight_grade_trim_red": 0.0,
+  "highlight_magenta": 0.0,
+  "highlight_reconstruction": 0,
+  "highlight_tint_hue": 0.0,
+  "highlight_tint_strength": 0.0,
+  "highlight_yellow": 0.0,
+  "hold_black": false,
+  "hue_trim": 0.0,
+  "icc_input_path": null,
+  "icc_output_path": null,
+  "ir_attenuation": true,
+  "ir_dust_remove": false,
+  "ir_threshold": 0.66,
+  "jpeg_progressive": false,
+  "jpeg_quality": 90,
+  "jxl_distance": 1.0,
+  "jxl_effort": 7,
+  "jxl_lossless": true,
+  "lens_ca_from_metadata": false,
+  "lens_distortion_from_metadata": false,
+  "lens_id": "",
+  "lens_make": "",
+  "lens_model": "",
+  "linear_raw": false,
+  "lith_abruptness": 0.6,
+  "lith_exposure": 2.0,
+  "lith_snatch": 0.55,
+  "local_ceils": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "local_floors": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "local_masks": {
+   "masks": []
+  },
+  "location_city": "",
+  "location_country": "",
+  "location_state": "",
+  "lock_bounds": false,
+  "locked_ceils": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "locked_floors": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "locked_neutral_axis": null,
+  "luma_range_clip": 0.0,
+  "manual_dust_size": 6,
+  "manual_dust_spots": [],
+  "manual_heal_strokes": [],
+  "max_aperture": null,
+  "meter_key": "",
+  "meter_rect": null,
+  "midtone_gamma": 0.0,
+  "midtone_gamma_trim_blue": 0.0,
+  "midtone_gamma_trim_green": 0.0,
+  "midtone_gamma_trim_red": 0.0,
+  "output_mode": "subfolder_of_source",
+  "output_subfolder": "export",
+  "overwrite": false,
+  "paper_aspect_ratio": "Original",
+  "paper_black": false,
+  "paper_dmin": false,
+  "paper_profile": "neutral",
+  "png_compress_level": 6,
+  "positive_source": false,
+  "preflash": 0.0,
+  "process_dilution": "",
+  "process_id": "",
+  "process_mode": "B&W Negative",
+  "process_temperature_c": null,
+  "process_time_seconds": null,
+  "profile_id": "",
+  "protect_original_metadata": false,
+  "push_pull": 0,
+  "render_intent": "print",
+  "roll_name": null,
+  "rotation": 0,
+  "sabattier_agitation": 0.7,
+  "sabattier_reexposure": 0.45,
+  "sabattier_strength": 1.3,
+  "saturation": 1.0,
+  "scanning": "",
+  "scanning_id": "",
+  "scratch_lines": [],
+  "scratch_threshold": 0.5,
+  "selenium_strength": 0.3,
+  "sensor_matrix": null,
+  "sensor_profile": "None",
+  "sensor_unmix": "two_scale",
+  "separation_damping": 0.0,
+  "sepia_strength": 0.5,
+  "shadow_cyan": 0.0,
+  "shadow_density": 0.0,
+  "shadow_grade": 0.0,
+  "shadow_grade_trim_blue": 0.0,
+  "shadow_grade_trim_green": 0.0,
+  "shadow_grade_trim_red": 0.0,
+  "shadow_magenta": 0.0,
+  "shadow_tint_hue": 0.0,
+  "shadow_tint_strength": 0.0,
+  "shadow_yellow": 0.0,
+  "sharpen": 0.25,
+  "sharpen_auto_masking": false,
+  "sharpen_masking": 0.1,
+  "sharpen_method": "usm",
+  "sharpen_radius": 1.0,
+  "shoulder": 0.0,
+  "shoulder_trim_blue": 0.0,
+  "shoulder_trim_green": 0.0,
+  "shoulder_trim_red": 0.0,
+  "shoulder_width": 2.5,
+  "shoulder_width_trim_blue": 0.0,
+  "shoulder_width_trim_green": 0.0,
+  "shoulder_width_trim_red": 0.0,
+  "skin_protection": 0.5,
+  "source_color": false,
+  "stitch_align": true,
+  "stitch_canvas": [
+   0,
+   0
+  ],
+  "stitch_enabled": false,
+  "stitch_paths": [],
+  "stitch_sizes": [],
+  "stitch_transforms": [],
+  "stitch_triplets": [],
+  "tiff_compression": "zlib",
+  "toe": 0.0,
+  "toe_trim_blue": 0.0,
+  "toe_trim_green": 0.0,
+  "toe_trim_red": 0.0,
+  "toe_width": 2.5,
+  "toe_width_trim_blue": 0.0,
+  "toe_width_trim_green": 0.0,
+  "toe_width_trim_red": 0.0,
+  "use_cast_average": false,
+  "use_color_average": false,
+  "use_luma_average": false,
+  "userDir": "/root/Documents/NegPy",
+  "vanadium_strength": 0.0,
+  "vignette_roundness": 0.0,
+  "vignette_size": 0.5,
+  "vignette_stops": 0.0,
+  "wb_cyan": 0.0,
+  "wb_magenta": 0.0,
+  "wb_yellow": 0.0,
+  "webp_lossless": false,
+  "webp_method": 4,
+  "webp_quality": 90,
+  "white_point_offset": 0.0,
+  "white_point_trim_blue": 0.0,
+  "white_point_trim_green": 0.0,
+  "white_point_trim_red": 0.0
+ },
+ "context": {
+  "active_roi": null,
+  "original_size": [
+   72,
+   108
+  ],
+  "process_mode": "B&W Negative",
+  "scale_factor": 0.0675
+ },
+ "metrics": {
+  "active_roi": null,
+  "base_log": null,
+  "base_source": "read",
+  "content_rect": null,
+  "density_above_base": null,
+  "distortion_k1": 0.0,
+  "film_base_density": null,
+  "final_bounds": {
+   "ceils": [
+    -0.11924177857264881,
+    -0.11924177857264881,
+    -0.11924177857264881
+   ],
+   "floors": [
+    -0.7440804109573365,
+    -0.7440804109573365,
+    -0.7440804109573365
+   ]
+  },
+  "geometry_params": {
+   "converge_h": 0.0,
+   "converge_v": 0.0,
+   "fine_rotation": 0.0,
+   "flip_horizontal": false,
+   "flip_vertical": false,
+   "rotation": 0
+  },
+  "highlight_point": 0.021710773929953575,
+  "log_bounds": {
+   "ceils": [
+    -0.11924177857264881,
+    -0.11924177857264881,
+    -0.11924177857264881
+   ],
+   "floors": [
+    -0.7440804109573365,
+    -0.7440804109573365,
+    -0.7440804109573365
+   ]
+  },
+  "log_bounds_base": {
+   "ceils": [
+    -0.11924177857264881,
+    -0.11924177857264881,
+    -0.11924177857264881
+   ],
+   "floors": [
+    -0.7440804109573365,
+    -0.7440804109573365,
+    -0.7440804109573365
+   ]
+  },
+  "log_bounds_buffer_val": 0.05,
+  "log_bounds_clip_val": 0.0,
+  "log_bounds_color_clip_val": 1.0,
+  "log_bounds_crosstalk_val": [
+   0.0,
+   null,
+   "Color Negative"
+  ],
+  "log_bounds_mode_val": "B&W Negative",
+  "log_bounds_rect_val": [
+   null,
+   null
+  ],
+  "metered_anchor": 0.4542177030881867,
+  "neutral_axis_refs": null,
+  "norm_density_range": 0.6248386323846876,
+  "pre_trim_bounds": {
+   "ceils": [
+    -0.11924177857264881,
+    -0.11924177857264881,
+    -0.11924177857264881
+   ],
+   "floors": [
+    -0.7440804109573365,
+    -0.7440804109573365,
+    -0.7440804109573365
+   ]
+  },
+  "print_slopes": [
+   2.161038450197935,
+   2.161038450197935,
+   2.161038450197935
+  ],
+  "scan_clip_fractions": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "shadow_point": 0.9970456957817078,
+  "textural_range": 0.5971184447407722
+ }
+}
