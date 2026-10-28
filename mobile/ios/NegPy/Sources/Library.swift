@@ -58,7 +58,7 @@ final class Library: ObservableObject {
     func frame(for hash: String) throws -> Frame? {
         if let have = frames[hash] { return have }
         guard let folder, let png = try folder.proxy(for: hash) else { return nil }
-        let frame = try Frame(png: png)
+        let frame = try Frame.fromPng(png: png)
         frames[hash] = frame
         return frame
     }
