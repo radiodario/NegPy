@@ -180,6 +180,7 @@ class PreferencesDialog(QDialog):
             (tr("Accessibility"), self._build_accessibility),
             (tr("Performance"), self._build_performance),
             (tr("Session & Storage"), self._build_storage),
+            (tr("Sync"), self._build_sync),
         ):
             section = CollapsibleSection(title)
             section.set_content(builder())
@@ -452,6 +453,49 @@ class PreferencesDialog(QDialog):
             2,
         )
         return host
+
+    def _build_sync(self) -> QWidget:
+        from negpy.desktop.sync_runner import SYNC_ENABLED_KEY, sync_settings
+        from negpy.services.sync.service import SYNC_PROXIES_KEY
+
+        host, grid = self._grid()
+        enabled, folder, proxies = sync_settings(self.repo)
+        self.sync_box = labeled_toggle(
+            "fa5s.sync-alt",
+            tr("Sync Edits"),
+            enabled,
+            tr("Share every saved edit through the sync folder, so NegPy on a phone opens the same edits."),
+        )
+        self.sync_box.toggled.connect(lambda checked: self.repo.save_global_setting(SYNC_ENABLED_KEY, bool(checked)))
+        self.sync_proxies_box = labeled_toggle(
+            "fa5s.mobile-alt",
+            tr("Write Phone Previews"),
+            proxies,
+            tr("Write a reduced copy of each open scan into the sync folder, which the phone renders from."),
+        )
+        self.sync_proxies_box.toggled.connect(lambda checked: self.repo.save_global_setting(SYNC_PROXIES_KEY, bool(checked)))
+        self._add_toggles(grid, 0, self.sync_box, self.sync_proxies_box)
+        _row, buttons = _button_row(
+            ((tr("Sync Folder…"), "fa5s.folder-open", tr("Choose the folder iCloud Drive syncs"), self._pick_sync_folder),)
+        )
+        self._add_toggles(grid, 1, buttons[0])
+        self._sync_folder_hint = hint_label(folder)
+        grid.addWidget(self._sync_folder_hint, 2, 0, 1, 2)
+        grid.addWidget(hint_label(tr("Put the folder in iCloud Drive and open it once in NegPy on the phone.")), 3, 0, 1, 2)
+        return host
+
+    def _pick_sync_folder(self) -> None:
+        from PyQt6.QtWidgets import QFileDialog
+
+        from negpy.desktop.sync_runner import sync_settings
+        from negpy.services.sync.service import SYNC_FOLDER_KEY
+
+        _enabled, current, _proxies = sync_settings(self.repo)
+        start = current if os.path.isdir(current) else os.path.dirname(current)
+        path = QFileDialog.getExistingDirectory(self, tr("Sync Folder"), start)
+        if path:
+            self.repo.save_global_setting(SYNC_FOLDER_KEY, path)
+            self._sync_folder_hint.setText(path)
 
     def _backend_name(self) -> str:
         try:

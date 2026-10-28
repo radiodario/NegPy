@@ -848,6 +848,12 @@ Shows the whole strip, to place and pick the frames before the scan. **Apply Fra
 *   **Carry Settings Between Frames** and **Persistent Settings…**: what a new frame takes from the last one (§1).
 *   **Manage Database…**: sizes, clearing saved edits, and library folders.
 
+### Sync
+
+*   **Sync Edits**: shares every saved edit through the sync folder. NegPy on an iPhone or iPad opens the same folder and shows the same edits; an edit saved on either device reaches the other, and the newer edit wins.
+*   **Write Phone Previews**: writes a reduced copy of each open scan into the folder, which the phone renders from. Off, the phone shows only the frames it already has.
+*   **Sync Folder…**: the folder iCloud Drive syncs. The default is the NegPy folder in iCloud Drive.
+
 ### Startup override (`override.toml`)
 
 If NegPy crashes at launch or draws wrongly, edit `Documents/NegPy/override.toml` (made on first run) and restart. Its values win over Preferences.

@@ -1427,6 +1427,10 @@ class ImageProcessor:
         export_token = detect_key + (hair_bake_token(orig_ret) if hair_masks else "")
         return f32_buffer, source_cs, export_token
 
+    def linear_source(self, file_path: str, params: WorkspaceConfig, source_hash: str) -> np.ndarray:
+        """The frame's baked, scene-linear source at full resolution, as the export decodes it."""
+        return self._prepare_export_source(file_path, params, source_hash)[0]
+
     def prefetch_export_source(
         self,
         file_path: str,

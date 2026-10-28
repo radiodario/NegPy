@@ -318,7 +318,13 @@ def main() -> None:
         window = MainWindow(controller)
         window.show()
 
+        from negpy.desktop.sync_runner import SyncRunner
+
+        sync_runner = SyncRunner(controller)
+        sync_runner.start()
+
         exit_code = app.exec()
+        sync_runner.stop()
         controller.cleanup()
         # PyQt's at-exit cleanup walks sip's wrapper map while it deletes these, and the Python
         # code their destructors run (event filters, the proxy style) can reallocate the map.

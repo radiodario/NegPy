@@ -117,6 +117,13 @@ class StorageRepository(IRepository):
             # Migration: index on file_path for path-based fallback queries
             conn.execute("CREATE INDEX IF NOT EXISTS idx_file_settings_path ON file_settings(file_path)")
 
+            # Migration: when the edit was last saved, so a device sync (services/sync) knows
+            # which side is newer. Null on rows older than the column.
+            try:
+                conn.execute("ALTER TABLE file_settings ADD COLUMN modified_at REAL")
+            except sqlite3.OperationalError:
+                pass  # already exists
+
             # Migration: add file_path so a whole-library semantic search can open a match
             # it has never hashed before -- image_embeddings otherwise only round-trips
             # through a hash a caller already holds.
@@ -159,12 +166,28 @@ class StorageRepository(IRepository):
             return {str(row[0]): str(row[1]) for row in cursor.fetchall()}
 
     def save_file_settings(self, file_hash: str, settings: WorkspaceConfig, file_path: str = "") -> None:
+        self.save_file_settings_json(file_hash, json.dumps(settings.to_dict(), default=str), file_path, time.time())
+
+    def save_file_settings_json(self, file_hash: str, settings_json: str, file_path: str, modified_at: float) -> None:
+        """Writes the edit as stored. A sync passes the record's own time, so the row never
+        reads as newer than the record it came from."""
         with self._connect(self.edits_db_path) as conn:
-            settings_json = json.dumps(settings.to_dict(), default=str)
             conn.execute(
-                "INSERT OR REPLACE INTO file_settings (file_hash, settings_json, file_path) VALUES (?, ?, ?)",
-                (file_hash, settings_json, file_path),
+                "INSERT OR REPLACE INTO file_settings (file_hash, settings_json, file_path, modified_at) VALUES (?, ?, ?, ?)",
+                (file_hash, settings_json, file_path, float(modified_at)),
             )
+
+    def iter_file_settings(self) -> List[tuple[str, str, str, Optional[float]]]:
+        """Every saved edit as (hash, settings_json, file_path, modified_at)."""
+        with self._connect(self.edits_db_path) as conn:
+            rows = conn.execute("SELECT file_hash, settings_json, file_path, modified_at FROM file_settings").fetchall()
+        return [(h, j, p or "", m) for h, j, p, m in rows]
+
+    def file_settings_modified_at(self, file_hash: str) -> Optional[float]:
+        """When the edit was last saved; None for no edit or a row older than the column."""
+        with self._connect(self.edits_db_path) as conn:
+            row = conn.execute("SELECT modified_at FROM file_settings WHERE file_hash = ?", (file_hash,)).fetchone()
+        return None if row is None or row[0] is None else float(row[0])
 
     def load_file_settings(self, file_hash: str) -> Optional[WorkspaceConfig]:
         with self._connect(self.edits_db_path) as conn:
