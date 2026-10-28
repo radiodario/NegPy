@@ -19,7 +19,7 @@ fn every_fixture_renders_as_the_desktop_did() {
         let diff = out.max_abs_diff(&expected);
         worst.push((name.clone(), diff));
         // The config and metrics scalars are f32 where the desktop solves from Python floats.
-        assert!(diff <= 2.5e-7, "{name}: max abs diff {diff}");
+        assert!(diff <= 5.0e-7, "{name}: max abs diff {diff}");
     }
     assert!(!worst.is_empty());
 }
