@@ -3,6 +3,7 @@
 
 pub mod altprocess;
 pub mod constants;
+pub mod engine;
 pub mod exposure;
 pub mod finish;
 pub mod geometry;
